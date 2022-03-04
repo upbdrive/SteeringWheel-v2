@@ -1,0 +1,6 @@
+[submodule "extlibs/pico-sdk"]
+	path = extlibs/pico-sdk
+	url = git@github.com:raspberrypi/pico-sdk.git
+[submodule "extlibs/pico-arduino-compat"]
+	path = extlibs/pico-arduino-compat
+	url = git@github.com:fhdm-dev/pico-arduino-compat.git
