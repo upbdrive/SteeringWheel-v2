@@ -10,13 +10,16 @@
 #include <genieArduino.h>
 // #include <Adafruit_NeoPixel.h>   TODO: needs manual rewrite
 #include <MCP2515_nb.h>          // Library for using CAN Communication
+#include "pico/multicore.h"
+#include <unordered_map>
+
 
 #define PIN 3
 #define NUMPIXELS 16
 
  // Define pin numbers
-#define buttonRightPin  20
-#define buttonLeftPin   21 
+#define buttonRightPin  26
+#define buttonLeftPin   27 
 #define displayResetPin  22
 #define displayTransPin  4
 #define displayRecvPin   5
@@ -75,14 +78,11 @@ Genie genie;
 void checkRightButton() {
     //inputButtonRight = digitalRead(7);
     inputButtonRight = gpio_get(buttonRightPin);
-    if(inputButtonRight)
-        std::cout << "Right pressed";
+
     if ((inputButtonRight == true ) && ( pageNum < 4 )) {
         if (buttonStateRight == 0) {
             pageNum += 1;
-            std::cout << "Setting page\n";std::cout.flush();
             genie.WriteObject(GENIE_OBJ_FORM, pageNum, 0); // Change to Form i+1
-            std::cout << "Setting page done\n";std::cout.flush();
         }
         buttonStateRight = 1;
     } else {
@@ -92,8 +92,7 @@ void checkRightButton() {
 
 void checkLeftButton() {
     inputButtonLeft = gpio_get(buttonLeftPin);
-    if(inputButtonLeft)
-        std::cout << "Left pressed";
+
     if (( inputButtonLeft ) == true && ( pageNum > 1) ) {
         if (buttonStateLeft == 0) {
             pageNum -= 1;
@@ -119,8 +118,8 @@ void setSpd(int cSpeed) {
 }
 
 void setRpm(int cRpm) {
-    /*genie.WriteObject(GENIE_OBJ_LED_DIGITS, 0x02, cRpm);
-    switch (cRpm) {
+    genie.WriteObject(GENIE_OBJ_LED_DIGITS, 0x02, cRpm);
+    /*switch (cRpm) {
         case 0:
             pixels.show();
             pixels.clear();
@@ -166,8 +165,8 @@ void setRpm(int cRpm) {
             pixels.clear();
             break;
         default:
-            break;*/       // TODO: needs rewrite
-    //}
+            break;       // TODO: needs rewrite
+    }*/
 }
 
 void setOilTemp(int oilTemp) {
@@ -308,63 +307,39 @@ void getLatLong(float previousLat, float previousLong) {
     genie.WriteStr(5, previousLng, 6);
 }
 
-void getCanMessage() {
-    CANPacket canMsg = CANPacket();
-    if (mcp2515.receivePacket(&canMsg) == 0) {
-        int id = canMsg.getId();
-        char idx = id & 0x000F;
 
-        for (int i = 0; i < 4; i++) {
-            short val = (canMsg.getData()[i * 2 + 1] << 8) + canMsg.getData()[i * 2];
-            data[idx * 4 + i] = val;
-        }
 
-        iters += 1;
-    }
+// NEW FUNCTIONS / CODE
+#define MISO 16
+#define MOSI 19
+#define CS   17
+#define SCK  18
+#define INT  20
 
-    if (iters % 5 == 0) {
-        setRpm(data[0]);
-        valueRpm = data[0];
 
-        setTPS(data[1]);
-        valueTps = data[1];
 
-        setWaterTemp(data[2]);
-        valueWaterTemp = data[2];
-    
-        setAirTemp(data[3]);
-        valueAirTemp = data[3];
-    
-        setMAP(data[4]);
-        valueMAP = data[4];
-    
-        setLambda(data[5]);
-        valueLambda = data[5];
-    
-        setSpd(data[6]/10);
-        valueSpeed = data[6]/10;
-    
-        setOilPres(data[7]);
-        valueOilPres = data[7];
-    
-        setFuelPres(data[8]);
-        valueFuelPres = data[8];
-    
-        setOilTemp(data[9]);
-        valueOilTemp = data[9];
-    
-        setBatVoltage(data[10]);
-        valueBatVolt = data[10];
-    
-        setFuelConsumption(data[11]);
-        valueFuelCons = data[11];
-    
-        setGear(data[12]);
-        valueGear = data[12];
-    
-        setAlarmLED(valueFuelPres, valueBatVolt, valueWaterTemp);
-    }
-}
+static bool flag = false;
+MCP2515 can = MCP2515();
+
+struct ECU_Packet
+{
+    int16_t data1 = -1;
+    int16_t data2 = -1;
+    int16_t data3 = -1;
+    int16_t data4 = -1;
+};
+
+static std::unordered_map <uint16_t, ECU_Packet> packets =
+    {
+        {0x2000, ECU_Packet()},
+        {0x2001, ECU_Packet()},
+        {0x2002, ECU_Packet()},
+        {0x2003, ECU_Packet()},
+        {0x2004, ECU_Packet()},
+        {0x2005, ECU_Packet()},
+        {0x2006, ECU_Packet()},
+        {0x2007, ECU_Packet()}
+    };
 
 void loop() {
     
@@ -402,22 +377,69 @@ void loop() {
 
     // 4D Systems LCD Screen serial port checking - user data update
 
-    //if (uart_is_readable(uart1)) {
-        //getCanMessage();
-        printf("here");
+    /*if (uart_is_readable(uart1)) { 
+        //printf("here");
         if (sessionActive) {
             updateScreen(millis() - sessionTime, bestSessionTime, lastLap, currentLap);
         } else {
             updateScreen(0, 0, 0, 0);
             updateScreen(currentLap, bestSessionTime, lastLap, currentLap);
         }
-    //}
+    }*/
 
     //timer.run();
+
+    genie.WriteObject(GENIE_OBJ_LED_DIGITS, 0x04, packets[0x2000].data4);           // set air temperature
+    setWaterTemp(packets[0x2000].data3);
+
     checkRightButton();
     checkLeftButton();
 }
 
+
+void poll_CAN()
+{
+    int active = false;
+    
+    
+    while( true )
+    {
+        CANPacket packet = CANPacket();
+        ECU_Packet p;
+
+        if (can.receivePacket(&packet) == 0) {
+            //std::cout << "Received CAN packet!\n";
+            //std::cout << "Packet has ID 0x" << packet.getId() << '\n';
+            if ( packet.getRtr() )
+            {
+                std::cout << "Got remote transmit request \n";
+                std::cout << "Requested size is " << packet.getDlc() << '\n';
+            }
+            //for (int i = 0; i < packet.getDlc(); i++) {
+			//	std::cout << packet.getData()[i] << " ";    
+			//}
+            //uint8_t* data = 
+
+            p.data1 = ( packet.getData() [1] << 8 ) | packet.getData()[0];          // I'm sorry. This looks horrible.
+            p.data2 = ( packet.getData() [3] << 8 ) | packet.getData()[2];          // But it's the only way I got this working.
+            p.data3 = ( packet.getData() [5] << 8 ) | packet.getData()[4];
+            p.data4 = ( packet.getData() [7] << 8 ) | packet.getData()[6];
+            packets[packet.getId()] = p;
+        }
+
+        if( flag == true)
+        {
+            //std::cout << "Updating";
+            
+            //packets.at(packet.getId()) = p;
+            flag = false;
+        }else
+        {
+           // std::cout << "No update needed \n";
+        }
+        std::cout.flush();
+    }
+}
 
 int main() {
     // SETUP PHASE
@@ -430,10 +452,10 @@ int main() {
     uart_init(uart1, 38400);            //38400
     gpio_set_function(displayTransPin, GPIO_FUNC_UART);
     gpio_set_function(displayRecvPin, GPIO_FUNC_UART);
-    std::cout << "Preparing genie\n";
+    //std::cout << "Preparing genie\n";
     genie.Begin(Serial2);
-    std::cout << "Genie Init done\n";
-    std::cout.flush();
+    //std::cout << "Genie Init done\n";
+    //std::cout.flush();
     
     gpio_init(displayResetPin);
     gpio_set_dir(displayResetPin, GPIO_OUT);
@@ -441,7 +463,7 @@ int main() {
     sleep_ms(1000);
     gpio_put(displayResetPin, true);
     sleep_ms(2500);
-    std::cout << "Display reset\n";std::cout.flush();
+    //std::cout << "Display reset\n";std::cout.flush();
 
 
     gpio_init(buttonLeftPin);
@@ -452,20 +474,41 @@ int main() {
 
     gpio_pull_down(buttonLeftPin);
     gpio_pull_down(buttonRightPin);
+    
 
-    // Show start screen (FORM 0)
-    //showLogo();
-    //std::cout << "Logo set\n";std::cout.flush();
+    // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+    spi_init(spi0, 500000); // Initialise spi0 at 500kHz
+
+    gpio_set_function(MISO, GPIO_FUNC_SPI);
+    gpio_set_function(SCK, GPIO_FUNC_SPI);
+    gpio_set_function(MOSI, GPIO_FUNC_SPI);
+
+    gpio_init(CS); // Initialise CS Pin
+    gpio_set_dir(CS, GPIO_OUT); // Set CS as output
+    gpio_put(CS, 0); // Set CS High to indicate no currect SPI communication
+
+    SPI.setSCK(SCK);   // SCK
+    SPI.setTX(MOSI);   // MOSI
+    SPI.setRX(MISO);   // MISO
+    SPI.setCS(CS);     // CS
+    
+    
+    can.setPins(CS, 20);
+
+    can.setClockFrequency(8e6);
+    can.begin(500E3);
+
+    multicore_launch_core1(poll_CAN);
+    sleep_ms(1000);
+
+    // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     
     
 
     while(true)
     {
-        //loop();
-        checkLeftButton();
-        checkRightButton();
-
-        
+        loop();
     }
 
     // Start the AltSoftSerial port at the GPS's set baud rate
