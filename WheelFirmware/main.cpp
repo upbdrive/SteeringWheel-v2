@@ -7,11 +7,12 @@
 #include <iostream>
 #include "pico/stdlib.h"
 #include <TinyGPSPlus.h>
-#include <genieArduino.h>
+#include <geniePicoDEV.h>
 // #include <Adafruit_NeoPixel.h>   TODO: needs manual rewrite
 #include <MCP2515_nb.h>          // Library for using CAN Communication
 #include "pico/multicore.h"
 #include <unordered_map>
+#include <chrono>
 
 
 #define PIN 3
@@ -75,14 +76,30 @@ Genie genie;
 // Create a timer object - call function to send data to NodeMCU once every 10 seconds
 //SimpleTimer timer;
 
+bool rbpressed = false;
+bool lbpressed = false;
+
+unsigned long long delta;
+
+
 void checkRightButton() {
     //inputButtonRight = digitalRead(7);
     inputButtonRight = gpio_get(buttonRightPin);
 
-    if ((inputButtonRight == true ) && ( pageNum < 4 )) {
+    /*if(inputButtonRight && !rbpressed)
+    {
+        rbpressed = true;
+        pageNum++;
+        genie.WriteObject(GENIE_OBJ_FORM, pageNum, 0);
+        std::cout << "MoveRight\n";
+        std::cout << pageNum << '\n';
+    }else if(!inputButtonRight && rbpressed)
+        rbpressed = false;*/
+    if ((inputButtonRight == true ) && ( pageNum < 4 ) && ( millis() - delta > 500 )) {
         if (buttonStateRight == 0) {
             pageNum += 1;
             genie.WriteObject(GENIE_OBJ_FORM, pageNum, 0); // Change to Form i+1
+            delta = millis();
         }
         buttonStateRight = 1;
     } else {
@@ -93,10 +110,21 @@ void checkRightButton() {
 void checkLeftButton() {
     inputButtonLeft = gpio_get(buttonLeftPin);
 
-    if (( inputButtonLeft ) == true && ( pageNum > 1) ) {
+    /*if(inputButtonLeft && !lbpressed)
+    {
+        lbpressed = true;
+        pageNum--; 
+        genie.WriteObject(GENIE_OBJ_FORM, pageNum, 0);
+        std::cout << "MoveLeft\n";
+        std::cout << pageNum << '\n';
+    }else if(!inputButtonLeft && lbpressed)
+        lbpressed = false;*/
+
+    if (( inputButtonLeft ) == true && ( pageNum > 1) && ( millis() - delta > 500 )) {
         if (buttonStateLeft == 0) {
             pageNum -= 1;
             genie.WriteObject(GENIE_OBJ_FORM, pageNum, 0); // Change to Form i-1
+            delta = millis();
         }
         buttonStateLeft = 1;
     } else {
@@ -231,10 +259,10 @@ void setTPS(int throttlePS) {
 
 void setWaterTemp(int waterTemp) {
     genie.WriteObject(GENIE_OBJ_STRINGS, 9, 0);
-    genie.WriteStr(9, waterTemp);
+    //genie.WriteStr(9, "Lorem ipsum dolor");
     if (waterTemp > 240) {
         genie.WriteObject(GENIE_OBJ_STRINGS, 2, 0);
-        genie.WriteStr(2, "W: water temp > 240");
+        //genie.WriteStr(2, "W: water temp > 240");
     } else {
         genie.WriteObject(GENIE_OBJ_STRINGS, 2, -1);
     }
@@ -341,7 +369,7 @@ static std::unordered_map <uint16_t, ECU_Packet> packets =
         {0x2007, ECU_Packet()}
     };
 
-void loop() {
+void mainloop() {
     
     // GPS serial port checking - lap timer
     /*if (uart_is_readable(uart0)) {
@@ -388,9 +416,16 @@ void loop() {
     }*/
 
     //timer.run();
+    //auto start = std::chrono::high_resolution_clock::now();
+    genie.WriteObject(GENIE_OBJ_LED_DIGITS, 0x04, 25);           // set air temperature packets[0x2000].data4
+    //auto end = std::chrono::high_resolution_clock::now();
+    //std::cout << std::chrono::duration_cast<std::chrono::seconds>( end - start ).count() << '\n';
 
-    genie.WriteObject(GENIE_OBJ_LED_DIGITS, 0x04, packets[0x2000].data4);           // set air temperature
-    setWaterTemp(packets[0x2000].data3);
+
+   // start = std::chrono::high_resolution_clock::now();
+    //setWaterTemp(packets[0x2000].data3);
+    //end = std::chrono::high_resolution_clock::now();
+    //std::cout << std::chrono::duration_cast<std::chrono::seconds>( end - start ).count() << '\n';
 
     checkRightButton();
     checkLeftButton();
@@ -408,18 +443,11 @@ void poll_CAN()
         ECU_Packet p;
 
         if (can.receivePacket(&packet) == 0) {
-            //std::cout << "Received CAN packet!\n";
-            //std::cout << "Packet has ID 0x" << packet.getId() << '\n';
             if ( packet.getRtr() )
             {
                 std::cout << "Got remote transmit request \n";
                 std::cout << "Requested size is " << packet.getDlc() << '\n';
             }
-            //for (int i = 0; i < packet.getDlc(); i++) {
-			//	std::cout << packet.getData()[i] << " ";    
-			//}
-            //uint8_t* data = 
-
             p.data1 = ( packet.getData() [1] << 8 ) | packet.getData()[0];          // I'm sorry. This looks horrible.
             p.data2 = ( packet.getData() [3] << 8 ) | packet.getData()[2];          // But it's the only way I got this working.
             p.data3 = ( packet.getData() [5] << 8 ) | packet.getData()[4];
@@ -427,19 +455,17 @@ void poll_CAN()
             packets[packet.getId()] = p;
         }
 
-        if( flag == true)
+        /*if( flag == true)
         {
-            //std::cout << "Updating";
-            
-            //packets.at(packet.getId()) = p;
             flag = false;
         }else
         {
            // std::cout << "No update needed \n";
-        }
+        }*/
         std::cout.flush();
     }
 }
+
 
 int main() {
     // SETUP PHASE
@@ -448,14 +474,16 @@ int main() {
     // UART 0 is ONLY used for debugging
 
     stdio_init_all();
-    //mcp2515.setPins(PIN_SPI0_SS);
+    
+    sleep_ms(2000);
+
     uart_init(uart1, 38400);            //38400
     gpio_set_function(displayTransPin, GPIO_FUNC_UART);
     gpio_set_function(displayRecvPin, GPIO_FUNC_UART);
-    //std::cout << "Preparing genie\n";
+    std::cout << "Preparing genie\n";
     genie.Begin(Serial2);
-    //std::cout << "Genie Init done\n";
-    //std::cout.flush();
+    std::cout << "Genie Init done\n";
+    std::cout.flush();
     
     gpio_init(displayResetPin);
     gpio_set_dir(displayResetPin, GPIO_OUT);
@@ -463,7 +491,7 @@ int main() {
     sleep_ms(1000);
     gpio_put(displayResetPin, true);
     sleep_ms(2500);
-    //std::cout << "Display reset\n";std::cout.flush();
+    std::cout << "Display reset\n";std::cout.flush();
 
 
     gpio_init(buttonLeftPin);
@@ -504,11 +532,17 @@ int main() {
 
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     
-    
+    genie.WriteObject(GENIE_OBJ_FORM, 1, 0);    // page 0: logo
+                                                // page 1: gear
+                                                // page 2: temperature readout
+                                                // page 3: battery voltage
+                                                // page 4: manifold pressure
 
     while(true)
     {
-        loop();
+        mainloop();
+        //std::cout << pageNum << '\n';
+        //std::cout << "Looped\n";std::cout.flush();
     }
 
     // Start the AltSoftSerial port at the GPS's set baud rate
