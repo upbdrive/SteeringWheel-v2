@@ -1,13 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-include(pico_sdk_import.cmake)
-
-add_subdirectory(../extlibs/pico-arduino-compat/libs/tinygpsplus build/tinygpsplus)
-#add_subdirectory(../extlibs/pico-arduino-compat/libs/geniearduino build/geniearduino)
-add_subdirectory(../extlibs/pico-arduino-compat/libs/mcp2515-nb build/mcp2515)
-add_subdirectory(../extlibs/pico-arduino-compat/libs/acan2515 build/acan2515)
-add_subdirectory(../extlibs/pico-arduino-compat/libs/acan build/acan)
-
+include(../extlibs/pico-sdk/pico_sdk_init.cmake)
 
 project(WheelFirmware C CXX ASM)
 
@@ -20,20 +13,22 @@ pico_sdk_init()
 
 add_executable(Firmware
     main.cpp
-    ../extlibs/libgenie/src/genieArduinoDEV.cpp
+    ../extlibs/genie/src/geniePicoDEV.cpp
+    ../extlibs/mcp2515/src/MCP2515.cpp
+    ../extlibs/mcp2515/src/CANPacket.cpp
+    ../extlibs/mcp2515/src/Utilities.cpp
 )
 
 pico_enable_stdio_usb(Firmware 1)
 pico_enable_stdio_uart(Firmware 0)
 
 
-target_include_directories(Firmware PRIVATE pico-arduino-compat/libs/tinygpsplus ../extlibs/libgenie/src)
+#target_include_directories(Firmware PRIVATE ../extlibs/genie/src ../extlibs/libgenie/src)
+target_include_directories(Firmware PRIVATE ../extlibs/genie/src ../extlibs/mcp2515/src)
 target_link_libraries(Firmware pico_stdlib)
 target_link_libraries(Firmware
-  pac-tinygpsplus
-  #pac-geniearduino
-  pac-mcp2515-nb
   pico_multicore
+  hardware_spi
 )
 pico_add_extra_outputs(Firmware)
 

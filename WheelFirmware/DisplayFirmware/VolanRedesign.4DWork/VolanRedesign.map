@@ -1,0 +1,75 @@
+linked : 12    main 000174
+ stmt:Offset  stmt:offset  stmt:offset  stmt:offset  stmt:offset  stmt:offset  stmt:offset  stmt:offset
+  172:00017d 
+
+ stmt:Offset  stmt:offset  stmt:offset  stmt:offset  stmt:offset  stmt:offset  stmt:offset  stmt:offset
+  402:00017f   404:000187   405:000190   406:000199   407:0001a2   408:0001ab   409:0001b3   410:0001b9 
+  425:0001c4   431:0001d5   432:0001dc   433:0001e3   434:0001ea   435:0001f1   436:0001f8   437:0001ff 
+  438:000206   439:00020d   440:000214   441:00021b   442:000222   443:000229   444:000230   445:000237 
+  446:00023e   447:000245   448:00024c   449:000253   450:00025a   451:000261   452:000268   453:00026f 
+  454:000276   455:00027d   456:000284   457:00028b   458:000292   459:000299   460:0002a0   461:0002a7 
+  462:0002ae   463:0002b5   464:0002bc   467:0002cd   469:0002db   470:0002e7   471:0002f3   473:0002ff 
+  474:000317   478:00033d   479:000347   480:00034e   481:000366   482:000373   483:00037f   484:000388 
+  485:000399   493:0003af   496:0003b6   500:0003be   501:0003c6   502:0003cd   505:0003cd   506:0003d8 
+  507:0003e1   508:0003ea   510:0003fc   511:00040b   512:000413   513:000419   514:000423   515:00042b 
+  516:000434   517:00043c   518:000441   520:00044a   521:000452   522:00045b   523:000467   527:000472 
+  530:00047c   531:00048f   533:000493   535:00049a   536:0004a4   537:0004b7   538:0004bf   539:0004c5 
+  540:0004ce   541:0004d6   542:0004df   543:0004e4   545:0004ed   546:000500   547:00050c   548:000518 
+  552:000523   554:00052c   557:000533   559:000545   560:00054a   562:000553   564:00055d   565:000566 
+  567:000578   568:00057d   570:000586   571:000598   573:0005a0   574:0005a9   576:0005bb   577:0005c0 
+  579:0005c9   580:0005d1   582:0005d9   583:0005e2   584:0005ea   585:0005f0   593:0005f6   594:000601 
+  595:00061f   596:00062d   597:00064a   599:000650   600:000658   601:000661   603:00066a   604:000672 
+  605:000678   608:00067e   609:000689   610:000694   612:00069d   613:0006a3   614:0006aa   616:0006b0 
+  617:0006b8   618:0006c8   619:0006cf   620:0006d5   620:0006dd   621:0006e6   626:000701   629:00070a 
+  630:00070a   632:00070a   633:00070a   635:00070a   637:00070a   639:00070a   640:00070a   641:00070a 
+  643:00070a   645:00070a   646:00070a   647:00070a   649:00070a   651:00070a 
+
+linked : 11    DoGFXObjects 00070B
+skipped: 10    UpdateObjects ----
+linked : 9     ActivateForm 00070C
+ stmt:Offset  stmt:offset  stmt:offset  stmt:offset  stmt:offset  stmt:offset  stmt:offset  stmt:offset
+  301:00070c   302:000715   303:000739   304:000747   308:000757   310:00075d   311:00076b   312:00077b 
+  313:000781   317:000787   318:0007ab   319:0007ba   320:0007bf   321:0007c3   323:0007d4   324:0007e7 
+  326:0007f3   327:0007fd   328:000805   329:00080e   330:000816   336:00082a   337:000842   338:00084f 
+
+linked : 8     ledDigitsDisplay 000866
+ stmt:Offset  stmt:offset  stmt:offset  stmt:offset  stmt:offset  stmt:offset  stmt:offset  stmt:offset
+  260:000868   260:00087b   261:00087c   262:00088b   263:000892   264:000899   265:000899   266:0008a2 
+  268:0008af   269:0008bb   270:0008c5   272:0008c9   273:0008cf   274:0008d5   275:0008f1   276:0008fa 
+  277:000918   278:000920   279:000926   279:00092e   283:000934   284:000942   286:000951   287:000959 
+  289:000962   290:00097e   291:000990   292:00099e   293:0009a8 
+
+linked : 7     WriteObject 0009BC
+ stmt:Offset  stmt:offset  stmt:offset  stmt:offset  stmt:offset  stmt:offset  stmt:offset  stmt:offset
+  235:0009bc   236:0009c4   237:0009cc   239:0009cd   240:0009e0   241:0009e7   242:0009ef   243:0009fd 
+  244:000a0b   246:000a0c   247:000a14   248:000a20   250:000a21   251:000a2f   252:000a39 
+
+linked : 6     ReadObject 000A3A
+ stmt:Offset  stmt:offset  stmt:offset  stmt:offset  stmt:offset  stmt:offset  stmt:offset  stmt:offset
+  214:000a3a   216:000a44   217:000a53   218:000a5b   219:000a64   220:000a77   221:000a8a   222:000a92 
+  224:000a9f   226:000aaf 
+
+linked : 5     SendReport 000ABE
+ stmt:Offset  stmt:offset  stmt:offset  stmt:offset  stmt:offset  stmt:offset  stmt:offset  stmt:offset
+  202:000abe   203:000ac6   204:000ace   205:000ad6   206:000ae1   207:000ae9 
+
+linked : 4     seroutOcs 000AF0
+ stmt:Offset  stmt:offset  stmt:offset  stmt:offset  stmt:offset  stmt:offset  stmt:offset  stmt:offset
+  197:000af0   198:000af8 
+
+linked : 3     nak0 000AFF
+ stmt:Offset  stmt:offset  stmt:offset  stmt:offset  stmt:offset  stmt:offset  stmt:offset  stmt:offset
+  192:000aff   193:000b07 
+
+linked : 2     seroutCS 000B0E
+ stmt:Offset  stmt:offset  stmt:offset  stmt:offset  stmt:offset  stmt:offset  stmt:offset  stmt:offset
+  187:000b0e   188:000b16 
+
+linked : 1     PrintStrings 000B20
+ stmt:Offset  stmt:offset  stmt:offset  stmt:offset  stmt:offset  stmt:offset  stmt:offset  stmt:offset
+    3:000b22     4:000b31     5:000b36     7:000b43     9:000b4c     9:000b64    10:000b65    11:000b71 
+   14:000b7d    15:000b86    16:000bad    17:000bbb    19:000be4    20:000c02    21:000c0a    22:000c1a 
+   26:000c22    27:000c2e    28:000c3a    30:000c42    32:000c54    33:000c59    34:000c5f    35:000c6a 
+   36:000c72    37:000c7a    40:000c8b    41:000c9b    42:000ca5    43:000caf    44:000cbb    45:000cc7 
+   46:000cc7    47:000cd0    49:000cde    51:000ce9 
+

@@ -4,3 +4,9 @@
 [submodule "extlibs/pico-arduino-compat"]
 	path = extlibs/pico-arduino-compat
 	url = git@github.com:fhdm-dev/pico-arduino-compat.git
+[submodule "extlibs/genie"]
+	path = extlibs/genie
+	url = https://github.com/jtmaston/ViSi-Genie-PiPico-Library-DEV.git
+[submodule "extlibs/mcp2515"]
+	path = extlibs/mcp2515
+	url = https://github.com/jtmaston/PiPico-MCP2515-nb.git

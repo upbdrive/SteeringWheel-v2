@@ -6,13 +6,13 @@
 
 #include <iostream>
 #include "pico/stdlib.h"
-#include <TinyGPSPlus.h>
 #include <geniePicoDEV.h>
 // #include <Adafruit_NeoPixel.h>   TODO: needs manual rewrite
 #include <MCP2515_nb.h>          // Library for using CAN Communication
 #include "pico/multicore.h"
 #include <unordered_map>
 #include <chrono>
+#include <string>
 
 
 #define PIN 3
@@ -25,16 +25,10 @@
 #define displayTransPin  4
 #define displayRecvPin   5
 
-// CAN BUS communication variables
-//struct can_frame canMsg;
 
 MCP2515 mcp2515;
 short data[40];
 int iters = 0;
-
-int valueRpm, valueTps, valueWaterTemp, valueAirTemp, valueMAP,
-    valueLambda, valueSpeed, valueOilPres, valueFuelPres,
-    valueOilTemp, valueFuelCons, valueGear, valueBatVolt;
 
 // Push Buttons variables
 int pageNum = 1;
@@ -44,62 +38,21 @@ int buttonState = 0;
 int buttonStateLeft = 0;
 int buttonStateRight = 0;
 
-// Location variables
-float previousLat = 0.0; // previous latitude that was measured
-float previousLng = 0.0; // previous longitude that was measured
-const float latFinal1 = 44.377129; // finish line P1 latitude
-const float longFinal1 = 26.167671; // finish line P1 longitude
-const float latFinal2 = 44.377112; // finish line P2 latitude
-const float longFinal2 = 26.167696; // finish line P2 longitude
-const float lineCrossingError = 0.01; // measurement error
 
-// Lap time tracking
-bool sessionActive = false;
-unsigned long sessionTime = 0;
-unsigned long bestSessionTime = 0;
-unsigned long currentLap = 0;
-unsigned long bestLap = 0;
-unsigned long lastLap = 0;
-
-// Create a TinyGPS++ object
-TinyGPSPlus gps;
-
-// Create a Software Serial port called "myNode" - NodeMCU communication
-//SoftwareSerial myNode(5, 6);          TODO: change for regular serial
-
-// Create a AltSoftSerial port called "mySerial" - GPS communication
-//AltSoftSerial mySerial;               TODO: change for regular serial
-
-// Create a genie object - 4D Systems Display communication
 Genie genie;
-
-// Create a timer object - call function to send data to NodeMCU once every 10 seconds
-//SimpleTimer timer;
-
-bool rbpressed = false;
-bool lbpressed = false;
 
 unsigned long long delta;
 
 
 void checkRightButton() {
-    //inputButtonRight = digitalRead(7);
     inputButtonRight = gpio_get(buttonRightPin);
-
-    /*if(inputButtonRight && !rbpressed)
-    {
-        rbpressed = true;
-        pageNum++;
-        genie.WriteObject(GENIE_OBJ_FORM, pageNum, 0);
-        std::cout << "MoveRight\n";
-        std::cout << pageNum << '\n';
-    }else if(!inputButtonRight && rbpressed)
-        rbpressed = false;*/
-    if ((inputButtonRight == true ) && ( pageNum < 4 ) && ( millis() - delta > 500 )) {
+    if ((inputButtonRight == true ) && ( pageNum < 4 ) && ( to_ms_since_boot(get_absolute_time()) - delta > 500 )) {
         if (buttonStateRight == 0) {
             pageNum += 1;
             genie.WriteObject(GENIE_OBJ_FORM, pageNum, 0); // Change to Form i+1
-            delta = millis();
+            delta = to_ms_since_boot(get_absolute_time());
+            std::cout << "MoveRight ";
+            std::cout << pageNum << '\n';
         }
         buttonStateRight = 1;
     } else {
@@ -109,22 +62,13 @@ void checkRightButton() {
 
 void checkLeftButton() {
     inputButtonLeft = gpio_get(buttonLeftPin);
-
-    /*if(inputButtonLeft && !lbpressed)
-    {
-        lbpressed = true;
-        pageNum--; 
-        genie.WriteObject(GENIE_OBJ_FORM, pageNum, 0);
-        std::cout << "MoveLeft\n";
-        std::cout << pageNum << '\n';
-    }else if(!inputButtonLeft && lbpressed)
-        lbpressed = false;*/
-
-    if (( inputButtonLeft ) == true && ( pageNum > 1) && ( millis() - delta > 500 )) {
+    if (( inputButtonLeft ) && ( pageNum > 1) && ( to_ms_since_boot(get_absolute_time()) - delta > 500 )) {
         if (buttonStateLeft == 0) {
             pageNum -= 1;
             genie.WriteObject(GENIE_OBJ_FORM, pageNum, 0); // Change to Form i-1
-            delta = millis();
+            delta = to_ms_since_boot(get_absolute_time());
+            std::cout << "MoveLeft ";
+            std::cout << pageNum << '\n';
         }
         buttonStateLeft = 1;
     } else {
@@ -207,21 +151,21 @@ void setAirTemp(int airTemp) {
 
 void setAlarmLED(int fuelPres, float batVolt, int waterTemp) {
     if ((fuelPres < 241) || (fuelPres < 440) || (batVolt < 118) || (waterTemp > 105)) {
-        genie.WriteObject(GENIE_OBJ_USER_LED, 0x00, 1);
+        //genie.WriteObject(GENIE_OBJ_USER_LED, 0x00, 1);
     } else {
-        genie.WriteObject(GENIE_OBJ_USER_LED, 0x00, 0);
+        //genie.WriteObject(GENIE_OBJ_USER_LED, 0x00, 0);
     }
 }
 
 void setFuelPres(int fuelPres) {
     genie.WriteObject(GENIE_OBJ_LED_DIGITS, 0x06, fuelPres);
     if (fuelPres < 241) {
-        genie.WriteObject(GENIE_OBJ_STRINGS, 1, 0);
-        genie.WriteStr(1, "W: fuel pressure < 241 kPa");
+        //genie.WriteObject(GENIE_OBJ_STRINGS, 1, 0);
+        //genie.WriteStr(1, "W: fuel pressure < 241 kPa");
     } else if (fuelPres > 440) {
-        genie.WriteStr(1, "W: fuel pressure > 440 kPa");
+        //genie.WriteStr(1, "W: fuel pressure > 440 kPa");
     } else {
-        genie.WriteObject(GENIE_OBJ_STRINGS, 1, -1);
+        //genie.WriteObject(GENIE_OBJ_STRINGS, 1, -1);
     }
 }
 
@@ -258,8 +202,8 @@ void setTPS(int throttlePS) {
 }
 
 void setWaterTemp(int waterTemp) {
-    genie.WriteObject(GENIE_OBJ_STRINGS, 9, 0);
-    //genie.WriteStr(9, "Lorem ipsum dolor");
+    //genie.WriteObject(GENIE_OBJ_STRINGS, 9, 0);
+    genie.WriteStr(9, std::to_string(waterTemp));
     if (waterTemp > 240) {
         genie.WriteObject(GENIE_OBJ_STRINGS, 2, 0);
         //genie.WriteStr(2, "W: water temp > 240");
@@ -267,74 +211,6 @@ void setWaterTemp(int waterTemp) {
         genie.WriteObject(GENIE_OBJ_STRINGS, 2, -1);
     }
 }
-
-void sendNode() {
-    /*
-    myNode.print(valueRpm); myNode.print("A");
-    myNode.print(valueTps); myNode.print("B");
-    myNode.print(valueWaterTemp); myNode.print("C");
-    myNode.print(valueAirTemp); myNode.print("D");
-    myNode.print(valueMAP); myNode.print("E");
-    myNode.print(valueLambda); myNode.print("F");
-    myNode.print(valueSpeed); myNode.print("G");
-    myNode.print(valueOilPres); myNode.print("H");
-    myNode.print(valueFuelPres); myNode.print("I");
-    myNode.print(valueOilTemp); myNode.print("J");
-    myNode.print(valueBatVolt); myNode.print("K");
-    myNode.print(valueFuelCons); myNode.print("L");
-    myNode.print(valueGear); myNode.print("M");
-    myNode.print('\n');
-    delay(500);                              TODO: this needs deprecation*/ 
-}
-
-//Stabilirea formatului cronometrului (00:00:0)
-String formatSessionTime(unsigned long sessionTime) {
-  unsigned long minutes = sessionTime / 60000;
-  unsigned long seconds = (sessionTime / 1000) - ((sessionTime / 60000) * 60);
-  unsigned long tenths = (sessionTime / 100) % 10;
-  if (seconds < 10) return String(minutes) + ":0" + String(seconds) + ":" + String(tenths);
-  else return String(minutes) + ":" + String(seconds) + ":" + String(tenths);
-}
-
-bool hasCrossedFinishLine() { // function for checking finish line crossing
-    float carLat = gps.location.lat();
-    float carLong = gps.location.lng();
-
-    for (int t = 0 ; t <= 1; t++) {
-        float finishLineLat = latFinal1 + t * (latFinal2 - latFinal1);
-        float finishLineLong = longFinal1 + t * (longFinal2 - longFinal1);
-
-        if ((carLat >= finishLineLat && carLong >= finishLineLong) &&
-            (sqrt((carLat - finishLineLat) * (carLat - finishLineLat) +
-            (carLong - finishLineLong) * (carLong - finishLineLong)) <=
-            lineCrossingError)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-void updateScreen(unsigned long currentSession, unsigned long bestSession, unsigned long lastLap, int currentLap) {
-    genie.WriteObject(GENIE_OBJ_STRINGS, 7, 0);
-    genie.WriteStr(7, formatSessionTime(lastLap));
-
-    genie.WriteObject(GENIE_OBJ_STRINGS, 8, 0);
-    genie.WriteStr(8, formatSessionTime(currentSession));
-  
-    genie.WriteObject(GENIE_OBJ_STRINGS, 6, 0);
-    genie.WriteStr(6, formatSessionTime(bestSession));
-  
-    genie.WriteObject(GENIE_OBJ_STRINGS, 10, 0);
-    genie.WriteStr(10, currentLap);
-}
-
-void getLatLong(float previousLat, float previousLong) {
-    genie.WriteObject(GENIE_OBJ_STRINGS, 4, 0);
-    genie.WriteStr(4, previousLat, 6);
-    genie.WriteObject(GENIE_OBJ_STRINGS, 5, 0);
-    genie.WriteStr(5, previousLng, 6);
-}
-
 
 
 // NEW FUNCTIONS / CODE
@@ -369,80 +245,58 @@ static std::unordered_map <uint16_t, ECU_Packet> packets =
         {0x2007, ECU_Packet()}
     };
 
-void mainloop() {
-    
-    // GPS serial port checking - lap timer
-    /*if (uart_is_readable(uart0)) {
-        byte data[1];
-        uart_read_blocking(uart0, data, 1);
-        if (gps.encode(data[0])) {
-            if ((previousLat != gps.location.lat()) || (previousLng != gps.location.lng())) {
-                if (hasCrossedFinishLine()) {
-                //Session starting, this is the first lap
-                    if (!sessionActive) {
-                        sessionActive = true;
-                        sessionTime = millis();
-                    } else {
-                        currentLap += 1;
-                        // best / first lap
-                        if ((bestSessionTime > millis() - sessionTime) || (bestSessionTime == 0)) {
-                            //session time , first lap -> bestSesstionTime = 0
-                            bestSessionTime = millis() - sessionTime;
-                            lastLap = bestSessionTime;
-                        } else {
-                            lastLap = millis() - sessionTime;
-                        }
-                    }
-                    //reset the sessionTime
-                    sessionTime = millis();
-                }
-                previousLat = gps.location.lat();
-                previousLng = gps.location.lng();
+
+
+bool refresh_display()
+{
+    for( auto const& [identifier, packet] : packets )
+    {
+        switch(identifier)
+        {
+            case 0x2000:
+            {
+                setRpm(packet.data1);
+                setTPS(packet.data2);
+                setWaterTemp(packet.data3);
+                setAirTemp(packet.data4);
+                break;
             }
-            getLatLong(previousLat, previousLng);
+            case 0x2001:
+            {
+                setMAP(packet.data1);
+                setLambda(packet.data2);
+                setSpd(packet.data3 / 10);
+                setOilPres(packet.data4);
+                break;
+            }
+            case 0x2002:
+            {
+                setFuelPres(packet.data1);
+                setOilTemp(packet.data2);
+                setBatVoltage(packet.data3);
+                setFuelConsumption(packet.data4);
+                break;
+            }
+            case 0x2003:
+            {
+                setGear(packet.data1);
+                setFuelConsumption(packet.data4);
+                break;
+            }
+
         }
-    }*/
-
-    // 4D Systems LCD Screen serial port checking - user data update
-
-    /*if (uart_is_readable(uart1)) { 
-        //printf("here");
-        if (sessionActive) {
-            updateScreen(millis() - sessionTime, bestSessionTime, lastLap, currentLap);
-        } else {
-            updateScreen(0, 0, 0, 0);
-            updateScreen(currentLap, bestSessionTime, lastLap, currentLap);
-        }
-    }*/
-
-    //timer.run();
-    //auto start = std::chrono::high_resolution_clock::now();
-    genie.WriteObject(GENIE_OBJ_LED_DIGITS, 0x04, 25);           // set air temperature packets[0x2000].data4
-    //auto end = std::chrono::high_resolution_clock::now();
-    //std::cout << std::chrono::duration_cast<std::chrono::seconds>( end - start ).count() << '\n';
-
-
-   // start = std::chrono::high_resolution_clock::now();
-    //setWaterTemp(packets[0x2000].data3);
-    //end = std::chrono::high_resolution_clock::now();
-    //std::cout << std::chrono::duration_cast<std::chrono::seconds>( end - start ).count() << '\n';
-
-    checkRightButton();
-    checkLeftButton();
+    }
+    return true;
 }
-
 
 void poll_CAN()
 {
     int active = false;
-    
-    
+    CANPacket packet = CANPacket();
     while( true )
     {
-        CANPacket packet = CANPacket();
-        ECU_Packet p;
-
         if (can.receivePacket(&packet) == 0) {
+            ECU_Packet p;
             if ( packet.getRtr() )
             {
                 std::cout << "Got remote transmit request \n";
@@ -453,19 +307,23 @@ void poll_CAN()
             p.data3 = ( packet.getData() [5] << 8 ) | packet.getData()[4];
             p.data4 = ( packet.getData() [7] << 8 ) | packet.getData()[6];
             packets[packet.getId()] = p;
+            std::cout << "Got packet: " << p.data1 << '\n';
         }
 
-        /*if( flag == true)
-        {
-            flag = false;
-        }else
-        {
-           // std::cout << "No update needed \n";
-        }*/
         std::cout.flush();
     }
 }
 
+void primary_loop() {
+    
+    checkRightButton();
+    checkLeftButton();
+}
+
+void secondary_loop()
+{
+    poll_CAN();
+}
 
 int main() {
     // SETUP PHASE
@@ -475,22 +333,23 @@ int main() {
 
     stdio_init_all();
     
-    sleep_ms(2000);
-
-    uart_init(uart1, 38400);            //38400
+    sleep_ms(5000);                   //Debug timer: allows you time to open the port on the pc to read the full sequence, otherwise not needed
+    genie.Ping(100);
+    uart_init(uart1, 38400);
     gpio_set_function(displayTransPin, GPIO_FUNC_UART);
     gpio_set_function(displayRecvPin, GPIO_FUNC_UART);
     std::cout << "Preparing genie\n";
-    genie.Begin(Serial2);
+    genie.Begin(uart1);
+    //genie.AttachDebugStream(uart0);
     std::cout << "Genie Init done\n";
     std::cout.flush();
     
     gpio_init(displayResetPin);
     gpio_set_dir(displayResetPin, GPIO_OUT);
     gpio_put(displayResetPin, false);
-    sleep_ms(1000);
+    sleep_ms(100);
     gpio_put(displayResetPin, true);
-    sleep_ms(2500);
+    sleep_ms(100);
     std::cout << "Display reset\n";std::cout.flush();
 
 
@@ -506,7 +365,7 @@ int main() {
 
     // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-    spi_init(spi0, 500000); // Initialise spi0 at 500kHz
+    spi_init(spi0, 500E3); // Initialise spi0 at 500kHz
 
     gpio_set_function(MISO, GPIO_FUNC_SPI);
     gpio_set_function(SCK, GPIO_FUNC_SPI);
@@ -514,66 +373,31 @@ int main() {
 
     gpio_init(CS); // Initialise CS Pin
     gpio_set_dir(CS, GPIO_OUT); // Set CS as output
-    gpio_put(CS, 0); // Set CS High to indicate no currect SPI communication
-
-    SPI.setSCK(SCK);   // SCK
-    SPI.setTX(MOSI);   // MOSI
-    SPI.setRX(MISO);   // MISO
-    SPI.setCS(CS);     // CS
-    
-    
-    can.setPins(CS, 20);
+    gpio_put(CS, true); // Set CS High to indicate no current SPI communication    
 
     can.setClockFrequency(8e6);
-    can.begin(500E3);
+    can.begin(500E3, MISO, MOSI, SCK, CS, spi0);
 
-    multicore_launch_core1(poll_CAN);
-    sleep_ms(1000);
+    multicore_launch_core1(secondary_loop);
+    //sleep_ms(1000);
 
     // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     
-    genie.WriteObject(GENIE_OBJ_FORM, 1, 0);    // page 0: logo
-                                                // page 1: gear
-                                                // page 2: temperature readout
-                                                // page 3: battery voltage
-                                                // page 4: manifold pressure
+    std::cout << "Ready to rock!\n";
+    genie.WriteObject(GENIE_OBJ_FORM, 1, 0);    // page 0: electric diagnostics
+                                                // page 1: main display
+                                                // page 2: mechanical diagnostics
 
+    uint32_t refresh_delta = to_ms_since_boot(get_absolute_time());
     while(true)
     {
-        mainloop();
-        //std::cout << pageNum << '\n';
-        //std::cout << "Looped\n";std::cout.flush();
+        primary_loop();
+        if(to_ms_since_boot(get_absolute_time()) - refresh_delta  > 500)
+        {
+            //refresh_display();
+            refresh_delta = to_ms_since_boot(get_absolute_time());
+        }
     }
-
-    // Start the AltSoftSerial port at the GPS's set baud rate
-    //mySerial.begin(9800);
-    //uart_init(uart1, 9800);
-
-
-    // Shift lights
-    //pixels.begin();   // TODO: this
-
-    // CAN communication
-    /*SPI.begin();
-    mcp2515.begin(CAN_500KBPS);
-    mcp2515.setClockFrequency(MCP_8MHZ);
-    mcp2515.setNormalMode();
-
-    // Initialize the left and right pushbutton pins as inputs
-    gpio_init(buttonLeftPin);gpio_init(buttonRightPin);
-    gpio_set_dir(buttonRightPin, GPIO_IN);
-    gpio_set_dir(buttonLeftPin, GPIO_IN);
-    
-    sleep_ms(500);
-
-    // Reset display
-
-    
-
-    // Timer for sending data to NodeMCU
-    //timer.setInterval(10000, sendNode);
-    
-    */
     return 0;
 }
 
