@@ -1,3 +1,14 @@
 .vscode
 build
 extlibs/pico-examples
+*.dat
+*.gcf
+*.gci
+*.txf
+*.d01
+*.g01
+*.4XE
+*.cfg
+*.4DGTX
+WheelFirmware/DisplayFirmware/VolanRedesign.4DWork
+WheelFirmware/DisplayFirmware/VolanRework.4DWork

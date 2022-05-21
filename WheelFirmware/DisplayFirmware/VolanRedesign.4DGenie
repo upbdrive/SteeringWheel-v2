@@ -5,13 +5,13 @@ Depends
 end
 Options
     Genie
-    Speed                        38400
+    Speed                        115200
     Checksum                     No
     ResponseSize                 2
     Multidrop                    No
     Destination                  2
     DestBank                     0
-    MainForm                     1
+    MainForm                     3
     SndBuf                       0
     ButtonDisable                No
     SignedDigits                 Yes
@@ -45,8 +45,8 @@ Form
     OnTouchReleased              ''
 end
 StaticText
-    Name                         Statictext12
-    Alias                        Statictext12
+    Name                         Statictext0
+    Alias                        Statictext0
     Alignment                    Left
     AutoSize                     Yes
     Caption                      V
@@ -64,7 +64,7 @@ StaticText
     WordWrap                     Yes
 end
 Meter
-    Name                         Meter1
+    Name                         Meter0
     Alias                        BatteryGauge
     Angle                        30
     Backimage                    (None)
@@ -120,7 +120,7 @@ Meter
     OnTouchReleased              ''
 end
 LedDigits
-    Name                         Leddigits10
+    Name                         Leddigits0
     Alias                        BattReadout
     Color                        BLACK
     Decimals                     1
@@ -132,7 +132,7 @@ LedDigits
     Palette.High                 RED
     Palette.Low                  BLACK
     Top                          232
-    Width                        69
+    Width                        67
     OnChanged                    ''
     OnTouchMoving                ''
     OnTouchPressed               ''
@@ -156,7 +156,7 @@ Form
     OnTouchReleased              ''
 end
 LedDigits
-    Name                         Leddigits0
+    Name                         Leddigits1
     Alias                        Gear
     Color                        BLACK
     Decimals                     0
@@ -200,14 +200,14 @@ Gauge
     Maxvalue                     100
     Minvalue                     0
     Orientation                  Vertical
-    Palette1.High                clLime
-    Palette1.Low                 0x005100
+    Palette1.High                0x0700F7
+    Palette1.Low                 0x0500A2
     Palette2.High                clYellow
     Palette2.Low                 0x005151
-    Palette3.High                clRed
-    Palette3.Low                 0x000051
-    Percent1                     60
-    Percent2                     25
+    Palette3.High                clLime
+    Palette3.Low                 0x003C00
+    Percent1                     15
+    Percent2                     20
     Spacing                      1
     Step                         10
     Style                        BottomLeft
@@ -239,7 +239,7 @@ StaticText
     WordWrap                     Yes
 end
 Strings
-    Name                         Strings1
+    Name                         Strings0
     Alias                        FuelPercentReadout
     Alignment                    Center
     BGcolor                      BLACK
@@ -273,7 +273,7 @@ Border
     Width                        84
 end
 LedDigits
-    Name                         Leddigits1
+    Name                         Leddigits2
     Alias                        RPMReadout
     Color                        BLACK
     Decimals                     0
@@ -311,7 +311,7 @@ StaticText
     WordWrap                     Yes
 end
 LedDigits
-    Name                         Leddigits2
+    Name                         Leddigits3
     Alias                        Speedometer
     Color                        BLACK
     Decimals                     0
@@ -380,7 +380,7 @@ StaticText
     WordWrap                     Yes
 end
 LedDigits
-    Name                         Leddigits3
+    Name                         Leddigits4
     Alias                        FuelConsumption
     Color                        BLACK
     Decimals                     1
@@ -417,24 +417,27 @@ StaticText
     Width                        48
     WordWrap                     Yes
 end
-StaticText
-    Name                         Statictext0
-    Alias                        Statictext0
+Strings
+    Name                         Strings1
+    Alias                        Strings1
     Alignment                    Left
-    AutoSize                     Yes
-    Caption                      'Not enough Electronics team members!'
-    Color                        BLACK
-    Font.Color                   0x1912FF
-    Font.Effects                 []
-    Font.Name                    Tahoma
-    Font.Size                    12
-    Font.Style                   []
-    Height                       76
+    BGcolor                      BLACK
+    Height                       71
+    FGcolor                      0x0700F7
+    Font.Bold                    No
+    Font.CharSet                 ANSI
+    Font.Italic                  No
+    Font.Name                    '4D Font3 (8x12)'
+    Font.Opaque                  Yes
+    Font.Size                    -12
+    Font.Strikethrough           No
+    Font.Underline               No
     Left                         344
-    Top                          172
-    Transparent                  Yes
-    Width                        88
-    WordWrap                     Yes
+    Strings                      ''
+    StringsStyle                 Message
+    Top                          176
+    Width                        110
+    OnChanged                    ''
 end
 Form
     Name                         Form2
@@ -454,7 +457,7 @@ Form
     OnTouchReleased              ''
 end
 LedDigits
-    Name                         Leddigits4
+    Name                         Leddigits5
     Alias                        OilTemperature
     Color                        BLACK
     Decimals                     0
@@ -473,7 +476,7 @@ LedDigits
     OnTouchReleased              ''
 end
 LedDigits
-    Name                         Leddigits5
+    Name                         Leddigits6
     Alias                        AirTemperature
     Color                        BLACK
     Decimals                     0
@@ -492,7 +495,7 @@ LedDigits
     OnTouchReleased              ''
 end
 LedDigits
-    Name                         Leddigits6
+    Name                         Leddigits7
     Alias                        WaterTemperature
     Color                        BLACK
     Decimals                     0
@@ -616,7 +619,7 @@ StaticText
     WordWrap                     Yes
 end
 LedDigits
-    Name                         Leddigits7
+    Name                         Leddigits8
     Alias                        FuelPressure
     Color                        BLACK
     Decimals                     0
@@ -635,7 +638,7 @@ LedDigits
     OnTouchReleased              ''
 end
 LedDigits
-    Name                         Leddigits8
+    Name                         Leddigits9
     Alias                        ManifoldPressure
     Color                        BLACK
     Decimals                     0
@@ -759,7 +762,7 @@ StaticText
     WordWrap                     Yes
 end
 LedDigits
-    Name                         Leddigits9
+    Name                         Leddigits10
     Alias                        OilPressure
     Color                        BLACK
     Decimals                     0
@@ -773,6 +776,39 @@ LedDigits
     Top                          200
     Width                        91
     OnChanged                    ''
+    OnTouchMoving                ''
+    OnTouchPressed               ''
+    OnTouchReleased              ''
+end
+Form
+    Name                         Form3
+    Alias                        Form3
+    Bgtype                       Color
+    Color                        BLACK
+    Image                        (None)
+    Source.Height                0
+    Source.Left                  0
+    Source.Top                   0
+    Source.Width                 0
+    OnActivate                   ''
+    OnCreate                     ''
+    OnRepeat                     ''
+    OnTouchMoving                ''
+    OnTouchPressed               ''
+    OnTouchReleased              ''
+end
+Image
+    Name                         Image0
+    Alias                        Image0
+    Height                       272
+    Image                        Logo.jpg
+    Left                         0
+    Source.Height                272
+    Source.Left                  0
+    Source.Top                   0
+    Source.Width                 480
+    Top                          0
+    Width                        480
     OnTouchMoving                ''
     OnTouchPressed               ''
     OnTouchReleased              ''

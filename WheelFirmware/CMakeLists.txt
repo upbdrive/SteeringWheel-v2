@@ -29,6 +29,7 @@ target_link_libraries(Firmware pico_stdlib)
 target_link_libraries(Firmware
   pico_multicore
   hardware_spi
+  hardware_timer
 )
 pico_add_extra_outputs(Firmware)
 
