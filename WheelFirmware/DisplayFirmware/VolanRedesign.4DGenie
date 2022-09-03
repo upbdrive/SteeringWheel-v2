@@ -1,11 +1,11 @@
 ﻿Version     0.0
-Platform    uLCD-43D-L
+Platform    uLCD-43D-LR
 PlatRes     272x480
 Depends
 end
 Options
     Genie
-    Speed                        115200
+    Speed                        38400
     Checksum                     No
     ResponseSize                 2
     Multidrop                    No
@@ -167,7 +167,7 @@ LedDigits
     OutlineColor                 BLACK
     Palette.High                 clWhite
     Palette.Low                  BLACK
-    Top                          32
+    Top                          56
     Width                        98
     OnChanged                    ''
     OnTouchMoving                ''
@@ -322,7 +322,7 @@ LedDigits
     OutlineColor                 BLACK
     Palette.High                 clWhite
     Palette.Low                  BLACK
-    Top                          184
+    Top                          196
     Width                        90
     OnChanged                    ''
     OnTouchMoving                ''
@@ -343,7 +343,7 @@ StaticText
     Font.Style                   []
     Height                       33
     Left                         212
-    Top                          220
+    Top                          232
     Transparent                  Yes
     Width                        49
     WordWrap                     Yes
@@ -439,6 +439,30 @@ Strings
     Width                        110
     OnChanged                    ''
 end
+iGauge
+    Name                         IGauge0
+    Alias                        IGauge0
+    BaseColor                    0x181C18
+    Height                       20
+    Left                         132
+    Maxvalue                     125
+    Minvalue                     0
+    Orientation                  Horizontal
+    P1ActiveColor                LIME
+    P1InactiveColor              0x005000
+    P2ActiveColor                BLUEVIOLET
+    P2InactiveColor              PURPLE
+    P2start                      75
+    P3ActiveColor                RED
+    P3InactiveColor              0x000050
+    P3start                      90
+    Spacing                      0
+    Thickness                    0
+    Top                          28
+    TopRight                     No
+    Width                        201
+    OnChanged                    ''
+end
 Form
     Name                         Form2
     Alias                        Form2
@@ -518,11 +542,11 @@ Border
     Alias                        Border18
     Height                       63
     HighlightColor               clWhite
-    Left                         34
+    Left                         36
     ShadowColor                  BLACK
     Shape                        Frame
     Style                        Raised
-    Top                          59
+    Top                          60
     Width                        417
 end
 Border
